@@ -1,0 +1,16 @@
+{
+    "name": "emmaakachukwu/multiback",
+    "description": "Backup multiple data like DB and storage to preferred location",
+    "autoload": {
+        "psr-4": {
+            "Emmaakachukwu\\Multiback\\": "src/"
+        }
+    },
+    "authors": [
+        {
+            "name": "emmaakachukwu",
+            "email": "emmanuelakachukwu1@gmail.com"
+        }
+    ],
+    "require": {}
+}
