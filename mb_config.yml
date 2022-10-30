@@ -8,4 +8,3 @@ database:
           name: MYSQL_DB_NAME
           user: MYSQL_DB_USER
           pass: MYSQL_DB_PASS
-          

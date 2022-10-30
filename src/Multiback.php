@@ -2,6 +2,8 @@
 
 namespace Multiback;
 
+use Multiback\Database\Database;
+
 class Multiback
 {
     /**
@@ -38,5 +40,12 @@ class Multiback
     }
     
     protected function init()
-    {}
+    {
+        mbkLog('starting multi backup');
+
+        if ($dbDrivers = mbkConfig('database.drivers')) {
+            mbkLog('databases...');
+            new Database($dbDrivers);
+        }
+    }
 }
