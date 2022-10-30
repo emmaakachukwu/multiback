@@ -57,9 +57,10 @@ class Config
      * returns an array of all configs if no config param is passed
      * 
      * @param string|null $config
+     * @param mixed $default
      * @return string|array|null
      */
-    static function get(?string $config = null)
+    static function get(?string $config = null, $default = null)
     {
         $configs = self::parseConfigFile();
         $config = trim($config);
@@ -68,7 +69,7 @@ class Config
         $keys = explode(self::CONF_DELIMITER, $config);
         $value = $configs;
         foreach ($keys as $key) {
-            if (! is_array($value) || ! array_key_exists($key, $value)) return null;
+            if (! is_array($value) || ! array_key_exists($key, $value)) return $default;
             $value = $value[$key];
         }
 
