@@ -15,6 +15,13 @@ class Config
     protected const CONF_FILE_NAME = 'mb_config';
 
     /**
+     * Config string delimiter
+     * 
+     * @var string
+     */
+    protected const CONF_DELIMITER = '.';
+
+    /**
      * Get the config file path
      * 
      * gets all files named with the {CONF_FILE_NAME}.y*ml pattern and returns the first one
@@ -42,5 +49,29 @@ class Config
             echo "Unable to parse the YAML string: {$e->getMessage()}";
             exit(E_ERROR);
         }
+    }
+
+    /**
+     * Get a config
+     * 
+     * returns an array of all configs if no config param is passed
+     * 
+     * @param string|null $config
+     * @return string|array|null
+     */
+    static function get(?string $config = null)
+    {
+        $configs = self::parseConfigFile();
+        $config = trim($config);
+        if (! $config) return $configs;
+
+        $keys = explode(self::CONF_DELIMITER, $config);
+        $value = $configs;
+        foreach ($keys as $key) {
+            if (! is_array($value) || ! array_key_exists($key, $value)) return null;
+            $value = $value[$key];
+        }
+
+        return $value;
     }
 }
