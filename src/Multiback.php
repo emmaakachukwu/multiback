@@ -1,6 +1,6 @@
 <?php
 
-namespace Emmaakachukwu\Multiback;
+namespace Multiback;
 
 class Multiback
 {

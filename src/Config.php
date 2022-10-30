@@ -1,6 +1,6 @@
 <?php
 
-namespace Emmaakachukwu\Multiback;
+namespace Multiback;
 
 use Symfony\Component\Yaml\Exception\ParseException;
 use Symfony\Component\Yaml\Yaml;
