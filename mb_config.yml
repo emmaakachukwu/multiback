@@ -14,3 +14,6 @@ database:
               - users
             ignore:
               - migrations
+          create_db_query: true
+
+root_backup_dir: /tmp/multiback/
