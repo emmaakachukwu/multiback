@@ -47,6 +47,27 @@ trait Connection
     protected string $pass;
 
     /**
+     * Root backup directory
+     * 
+     * @var string
+     */
+    protected string $rootBackupDir;
+
+    /**
+     * Backup directory
+     * 
+     * @var string
+     */
+    protected string $backupDir;
+
+    /**
+     * Create DB query
+     * 
+     * @var bool
+     */
+    protected bool $createDbQuery;
+
+    /**
      * List of tables to backup
      * 
      * @var array
@@ -83,11 +104,14 @@ trait Connection
     protected function init(): void
     {
         $this->driver = $this->driver();
+        $this->rootBackupDir = $this->getRootBackupDir();
 
         foreach ($this->connections as $connection) {
             $this->parseConnection($connection);
+            mbkLog("\t$this->driver/$this->name database backup starting..");
+            $this->createAndSetBackupDir();
             $this->connect();
-            $this->fetch();
+            $this->backup();
         }
     }
 
@@ -99,7 +123,7 @@ trait Connection
     protected function driver(): string
     {
         $explode = explode("\\", __CLASS__);
-        return $explode[count($explode) - 1];
+        return strtolower($explode[count($explode) - 1]);
     }
 
     /**
@@ -120,5 +144,20 @@ trait Connection
         $tables = $connection['tables'];
         $this->tablesToBackup = $tables['backup'] ?? [];
         $this->tablesToIgnore = $tables['ignore'] ?? [];
+
+        $this->createDbQuery = $connection['create_db_query'] ?? false;
     }
+
+    protected function getRootBackupDir(): string
+    {
+        return rtrim(mbkConfig('root_backup_dir', '/tmp/multiback'), '/');
+    }
+
+    protected function createAndSetBackupDir(): void
+    {
+        $this->backupDir = "$this->rootBackupDir/$this->driver/$this->name/";
+        if (! is_dir($this->backupDir))
+            mkdir($this->backupDir, 0755, true);
+    }
+
 }
