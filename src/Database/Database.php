@@ -7,7 +7,7 @@ class Database
     protected const DRIVER_MYSQL = 'mysql';
 
     /**
-     * Specify database driver
+     * Database driver
      * 
      * E.g. mysql
      * 
@@ -28,7 +28,7 @@ class Database
         $this->init();
     }
 
-    protected function init()
+    protected function init(): void
     {
         foreach ($this->drivers as $db => $driver) {
             mbkLog("$db databases backup starting");
@@ -42,7 +42,7 @@ class Database
      * 
      * @return array
      */
-    protected static function supportedDrivers()
+    protected static function supportedDrivers(): array
     {
         $reflectionClass = new \ReflectionClass(__CLASS__);
         $consts = $reflectionClass->getConstants();
