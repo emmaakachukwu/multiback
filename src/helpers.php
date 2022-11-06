@@ -10,6 +10,7 @@ if (! function_exists('mbkLog'))
      */
     function mbkLog(...$values): void
     {
+        echo date("d-m-Y H-i-s\t");
         foreach($values as $value) {
             print_r($value);
             print_r(PHP_EOL);
