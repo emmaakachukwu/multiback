@@ -41,9 +41,28 @@ class Mysql implements Database
     }
 
     public function fetch()
-    {}
+    {
+        $this->tables();
+    }
 
-    public function tables()
-    {}
+    public function tables(): array
+    {
+        $alias = '_'.__FUNCTION__;
+        $tables = $this->query(
+            "SELECT TABLE_NAME $alias
+            FROM INFORMATION_SCHEMA.TABLES 
+            WHERE TABLE_SCHEMA = '$this->name'");
+        
+        $tables = array_map(function ($table) use ($alias) {
+            return $table[$alias];
+        }, $tables);
+
+        if (! empty($this->tablesToBackup))
+            $tables = array_intersect($this->tablesToBackup, $tables);
+        if (! empty($this->tablesToIgnore))
+            $tables = array_diff($tables, $this->tablesToIgnore);
+        
+        return $tables;
+    }
 
 }

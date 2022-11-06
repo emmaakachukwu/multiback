@@ -47,6 +47,20 @@ trait Connection
     protected string $pass;
 
     /**
+     * List of tables to backup
+     * 
+     * @var array
+     */
+    protected array $tablesToBackup;
+
+    /**
+     * List of tables to ignore
+     * 
+     * @var array
+     */
+    protected array $tablesToIgnore;
+
+    /**
      * List of connections
      * 
      * @var array
@@ -96,10 +110,15 @@ trait Connection
      */
     protected function parseConnection(array $connection)
     {
-        $this->host = getenv($connection['host'] ?? '127.0.0.1');
-        $this->port = getenv($connection['port']);
-        $this->name = getenv($connection['name']);
-        $this->user = getenv($connection['user']);
-        $this->pass = getenv($connection['pass']);
+        $auth = $connection['auth'];
+        $this->host = getenv($auth['host'] ?? '127.0.0.1');
+        $this->port = getenv($auth['port']);
+        $this->name = getenv($auth['name']);
+        $this->user = getenv($auth['user']);
+        $this->pass = getenv($auth['pass']);
+
+        $tables = $connection['tables'];
+        $this->tablesToBackup = $tables['backup'] ?? [];
+        $this->tablesToIgnore = $tables['ignore'] ?? [];
     }
 }
