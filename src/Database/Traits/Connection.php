@@ -2,6 +2,8 @@
 
 namespace Multiback\Database\Traits;
 
+use Multiback\Multiback;
+
 trait Connection
 {
     /**
@@ -150,7 +152,7 @@ trait Connection
 
     protected function getRootBackupDir(): string
     {
-        return rtrim(mbkConfig('root_backup_dir', '/tmp/multiback'), '/');
+        return rtrim(mbkConfig('root_backup_dir', Multiback::DEFAULT_ROOT_BACKUP_DIR), '/');
     }
 
     protected function createAndSetBackupDir(): void
