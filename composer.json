@@ -1,0 +1,18 @@
+{
+    "name": "emmaakachukwu/multiback",
+    "description": "Backup multiple data like DB and storage to preferred cloud storage",
+    "autoload": {
+        "psr-4": {
+            "Multiback\\": "src/"
+        }
+    },
+    "authors": [
+        {
+            "name": "emmaakachukwu",
+            "email": "emmanuelakachukwu1@gmail.com"
+        }
+    ],
+    "require": {
+        "symfony/yaml": "^6.3"
+    }
+}
