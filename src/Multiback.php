@@ -20,6 +20,8 @@ class Multiback
 
   protected array $actions;
 
+  protected array $sources;
+
   /**
    * @param string $configFile path to yaml file with defined configs
    * @param string $backupDir path to backup directory; default is /tmp/multiback
@@ -39,7 +41,7 @@ class Multiback
 
     $this->validateActions($actions);
     $config = $this->getConfig($configFile);
-    $sources = $this->sourceConfigs($config);
+    $this->sourceConfigs($config);
   }
 
   /**
@@ -108,11 +110,13 @@ class Multiback
     return true;
   }
 
-  /**
-   * @todo
-   */
-  protected function sourceConfigs(array $config): array
+  protected function sourceConfigs(array $config): void
   {
-    return [];
+    if (! in_array('export', $this->actions)) {
+      return;
+    }
+    foreach ($config['export'] as $type => $data) {
+      $this->sources[] = new Source($type, $data);
+    }
   }
 }
