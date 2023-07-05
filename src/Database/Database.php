@@ -28,7 +28,7 @@ class Database
   {
     foreach ($this->databases as $source_db_name => $data) {
       $this->validateData($data);
-      $class = __NAMESPACE__."\\".ucfirst($data['driver']);
+      $class = $this->getDriverClass($data['driver']);
       $conn = $data['connection'];
       $this->clients[] = new $class(
         Util::resolve($conn['name']),
@@ -40,6 +40,7 @@ class Database
         $data['compressed'] ?? true,
         $data['include'] ?? [],
         $data['exclude'] ?? [],
+        $data['truncate'] ?? [],
       );
     }
   }
@@ -66,16 +67,16 @@ class Database
         sprintf('Missing database requirement: %s;', implode(', ', $diff))
       );
     }
-    $this->validateDriver($data['driver']);
     return true;
   }
 
-  protected function validateDriver(string $driver): bool
+  protected function getDriverClass(string $driver): string
   {
-    if (! class_exists(ucfirst($driver))) {
+    $class = __NAMESPACE__."\\".ucfirst($driver);
+    if (strtolower($driver) == 'database' || ! class_exists($class)) {
       throw new ValidationException("Invalid database driver: $driver");
     }
-    return true;
+    return $class;
   }
 
   protected function export()
