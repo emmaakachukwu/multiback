@@ -3,67 +3,85 @@
 namespace Multiback\Database;
 
 use Multiback\Exception\ValidationException;
+use RuntimeException;
 
 class Database
 {
-  protected string $driver;
+  protected array $databases;
 
-  protected array $data;
+  protected string $backupDir;
 
-  protected $client;
+  protected array $clients = [];
 
-  protected $requiredDataKeys = ['connection'];
+  protected array $requiredDataKeys = ['connection', 'driver'];
 
-  public function __construct(array $data)
+  public function __construct(array $databases, string $backupDir)
   {
-    $this->driver = $data['driver'] ?? null;
-    $this->data = $data;
+    $this->databases = $databases;
+    $this->backupDir = $backupDir;
 
-    $this->validate();
     $this->setup();
   }
 
   protected function setup()
   {
-    $class = __NAMESPACE__."\\".ucfirst($this->driver);
-    $conn = $this->data['connection'];
-    $this->client = new $class(
-      $conn['name'],
-      $conn['user'],
-      $conn['pass'],
-      $conn['host'],
-      (int) $conn['port'],
+    foreach ($this->databases as $source_db_name => $data) {
+      $this->validateData($data);
+      $class = __NAMESPACE__."\\".ucfirst($data['driver']);
+      $conn = $data['connection'];
+      $this->clients[] = new $class(
+        $conn['name'],
+        $conn['user'],
+        $conn['pass'],
+        $conn['host'],
+        (int) $conn['port'],
+        $this->getBackupDir($source_db_name, $data['timestamped'] ?? false),
+        $data['compressed'] ?? false,
+        $data['include'] ?? [],
+        $data['exclude'] ?? [],
+      );
+    }
+    
+  }
+
+  protected function getBackupDir(string $source_db_name, bool $append_timestamp): string
+  {
+    $dir = sprintf(
+      '%s/%s%s',
+      $this->backupDir,
+      $source_db_name,
+      $append_timestamp ? '_' . date('d-m-Y_H-i-s') : '',
     );
+    if (!is_dir($dir) && !mkdir($dir, 0755, true)) {
+      throw new RuntimeException("Error creating backup directory: $dir");
+    }
+    return $dir;
   }
 
-  protected function validate(): bool
+  protected function validateData(array $data): bool
   {
-    $this->validateDriver();
-    $this->validateData();
-    return true;
-  }
-
-  protected function validateData(): bool
-  {
-    $diff = array_diff($this->requiredDataKeys, array_keys($this->data));
+    $diff = array_diff($this->requiredDataKeys, array_keys($data));
     if (! empty($diff)) {
       throw new ValidationException(
         sprintf('Missing database requirement: %s;', implode(', ', $diff))
       );
     }
+    $this->validateDriver($data['driver']);
     return true;
   }
 
-  protected function validateDriver(): bool
+  protected function validateDriver(string $driver): bool
   {
-    if (!$this->driver || !class_exists(ucfirst($this->driver))) {
-      throw new ValidationException("Invalid database driver: $this->driver");
+    if (! class_exists(ucfirst($driver))) {
+      throw new ValidationException("Invalid database driver: $driver");
     }
     return true;
   }
 
   protected function export()
   {
-    $this->client->export();
+    foreach ($this->clients as $client) {
+      $client->export();
+    }
   }
 }

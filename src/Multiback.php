@@ -20,6 +20,8 @@ class Multiback
 
   protected array $actions;
 
+  protected string $backupDir;
+
   protected array $sources;
 
   /**
@@ -38,6 +40,7 @@ class Multiback
   )
   {
     $this->actions = $actions;
+    $this->backupDir = $backupDir;
 
     $this->validateActions($actions);
     $config = $this->getConfig($configFile);
@@ -116,7 +119,7 @@ class Multiback
       return;
     }
     foreach ($config['export'] as $type => $data) {
-      $this->sources[] = new Source($type, $data);
+      $this->sources[] = new Source($type, $data, $this->backupDir);
     }
   }
 }

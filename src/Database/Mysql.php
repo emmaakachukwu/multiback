@@ -3,14 +3,18 @@
 namespace Multiback\Database;
 
 use Multiback\Database\Traits\Connection;
-use Multiback\Exception\DatabaseException;
+use Multiback\Database\Traits\Export;
 use Multiback\Database\Contracts\Database;
+use Multiback\Exception\DatabaseException;
 use PDO;
 use PDOException;
+use RuntimeException;
 
 class Mysql implements Database
 {
-  use Connection;
+  use Connection, Export;
+
+  protected const FILE_EXT = 'sql';
 
   public function __construct(
     string $name,
@@ -18,6 +22,11 @@ class Mysql implements Database
     string $pass = '',
     string $host = 'localhost',
     int $port = 3306,
+    string $backupDir = null,
+    bool $compressed = false,
+    array $include = [],
+    array $exclude = [],
+    array $truncate = [],
   )
   {
     $this->name = $name;
@@ -25,6 +34,11 @@ class Mysql implements Database
     $this->pass = $pass;
     $this->host = $host;
     $this->port = $port;
+    $this->compressed = $compressed;
+    $this->include = array_unique(array_merge($include, $truncate));
+    $this->exclude = $exclude;
+    $this->truncate = $truncate;
+    $this->backupFile = $this->getBackupFile($backupDir);
 
     $this->connect();
   }
@@ -43,6 +57,103 @@ class Mysql implements Database
     }
   }
 
-  protected function export()
-  {}
+  public function export(): void
+  {
+    $file = fopen($this->backupFile, 'a');
+    fwrite($file, $this->createDbQuery());
+    foreach ($this->tables() as $table) {
+      fwrite($file, $this->createTableQuery($table));
+      if (! in_array($table, $this->truncate)) {
+        fwrite($file, $this->insertQuery($table));
+      }
+    }
+    fclose($file);
+  }
+
+  public function query(string $queryString, int $queryMode = PDO::FETCH_ASSOC)
+  {
+    try {
+      return $this->connection->query($queryString, $queryMode);
+    } catch (PDOException $e) {
+      throw new DatabaseException("Database query error; query: $queryString, error: {$e->getMessage()}");
+    }
+  }
+
+  protected function fetch(string $queryString): array
+  {
+    $result = $this->query($queryString);
+    $rows = [];
+    foreach ($result as $row)
+      $rows[] = $row;
+    return $rows;
+  }
+
+  protected function getBackupFile(string $backupDir): string
+  {
+    $file = rtrim($backupDir ?? "./$this->name", '/').self::FILE_EXT;
+    if (file_exists($file) && !unlink($file)) {
+      throw new RuntimeException("Unable to delete file: $file");
+    }
+    return $file;
+  }
+
+  protected function tables(): array
+  {
+    $tables = $this->getTablesFromInfoSchema();
+    if (! empty($this->include)) {
+      $tables = array_intersect($this->include, $tables);
+    }
+    $tables = array_diff($tables, $this->exclude);
+    return $tables;
+  }
+
+  protected function getTablesFromInfoSchema(): array
+  {
+    $alias = '_tables';
+    $tables = $this->fetch(
+      "SELECT TABLE_NAME $alias
+      FROM INFORMATION_SCHEMA.TABLES 
+      WHERE TABLE_SCHEMA = '$this->name'"
+    );
+    return array_map(function ($table) use ($alias) {
+      return $table[$alias];
+    }, $tables);
+  }
+
+  protected function createDbQuery(): string
+  {
+    return <<<EOF
+    CREATE DATABASE IF NOT EXISTS `$this->name`;
+    USE `$this->name`;\n
+    EOF;
+  }
+
+  protected function createTableQuery(string $table): string
+  {
+    $result = $this->fetch("SHOW CREATE TABLE `$table`");
+    if (count($result) != 1 || !array_key_exists('Create Table', $result[0])) {
+      throw new DatabaseException("Error getting table schema: $table");
+    }
+    $sql = sprintf("%s;\n", $result[0]['Create Table']);
+    return str_ireplace("CREATE TABLE", "CREATE TABLE IF NOT EXISTS", $sql);
+  }
+
+  protected function insertQuery(string $table): string
+  {
+    $sql = "INSERT INTO `$table` VALUES\n";
+    $rows = $this->query("SELECT * FROM `$table`");
+    $tab_space = str_repeat(' ', 2);
+    foreach ($rows as $row) {
+      $sql .= sprintf('%s(%s)', $tab_space,
+        implode(', ',
+          array_map(function ($r) {
+            return "\"$r\"";
+          },
+          array_values($row))
+        )
+      );
+    }
+    return $sql;
+  }
+
 }

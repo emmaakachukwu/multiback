@@ -13,10 +13,13 @@ class Source
 
   protected $client;
 
-  public function __construct(string $type, array $data)
+  protected $backupDir;
+
+  public function __construct(string $type, array $data, string $backupDir)
   {
     $this->type = $type;
     $this->data = $data;
+    $this->backupDir = $backupDir;
 
     $this->setup($type);
   }
@@ -25,7 +28,7 @@ class Source
   {
     switch ($this->type) {
       case 'databases':
-        $this->client = new Database($this->data);
+        $this->client = new Database($this->data, $this->backupDir);
         break;
       
       default:

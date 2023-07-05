@@ -14,9 +14,5 @@ trait Connection
 
   protected int $port;
 
-  /**
-   * PDO connection object
-   * @var PDO
-   */
   protected $connection;
 }
