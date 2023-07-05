@@ -16,16 +16,20 @@ class Mysql implements Database
 {
   use Connection, Export;
 
-  protected const FILE_EXT = 'sql';
+  public const HOST = 'localhost';
 
   public const COMPRESSION = 'gz';
+
+  protected const FILE_EXT = 'sql';
+
+  protected const PORT = 3306;
 
   public function __construct(
     string $name,
     string $user,
     string $pass = '',
-    string $host = 'localhost',
-    int $port = 3306,
+    string $host = null,
+    int $port = null,
     string $backupDir = null,
     bool $compressed = true,
     array $include = [],
@@ -36,8 +40,8 @@ class Mysql implements Database
     $this->name = $name;
     $this->user = $user;
     $this->pass = $pass;
-    $this->host = $host;
-    $this->port = $port;
+    $this->host = $host ?? self::HOST;
+    $this->port = $port ?? self::PORT;
     $this->compressed = $compressed;
     $this->include = array_unique(array_merge($include, $truncate));
     $this->exclude = $exclude;
