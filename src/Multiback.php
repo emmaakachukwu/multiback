@@ -47,6 +47,17 @@ class Multiback
     $this->sourceConfigs($config);
   }
 
+  public function run(): void
+  {
+    foreach ($this->actions as $action) {
+      switch($action) {
+        case 'export':
+          $this->export();
+          break;
+      }
+    }
+  }
+
   /**
    * Get config data from config file
    */
@@ -120,6 +131,13 @@ class Multiback
     }
     foreach ($config['export'] as $type => $data) {
       $this->sources[] = new Source($type, $data, $this->backupDir);
+    }
+  }
+
+  protected function export(): void
+  {
+    foreach ($this->sources as $source) {
+      $source->export();
     }
   }
 }

@@ -24,6 +24,11 @@ class Source
     $this->setup($type);
   }
 
+  public function export()
+  {
+    $this->client->export();
+  }
+
   protected function setup()
   {
     switch ($this->type) {
@@ -36,8 +41,4 @@ class Source
     }
   }
 
-  protected function export()
-  {
-    $this->client->export();
-  }
 }

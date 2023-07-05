@@ -101,9 +101,13 @@ class Mysql implements Database
 
   protected function getBackupFile(string $backupDir): string
   {
-    $file = rtrim($backupDir ?? "./$this->name", '/').self::FILE_EXT;
+    $file = sprintf('%s.%s', rtrim($backupDir ?? "./$this->name", '/'), self::FILE_EXT);
     if (file_exists($file) && !unlink($file)) {
       throw new RuntimeException("Unable to delete file: $file");
+    }
+    $dir = dirname($file);
+    if (!is_dir($dir) && !mkdir($dir, 0755, true)) {
+      throw new RuntimeException("Unable to create directory: $dir");
     }
     return $file;
   }

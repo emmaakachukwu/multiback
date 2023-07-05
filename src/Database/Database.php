@@ -24,6 +24,13 @@ class Database
     $this->setup();
   }
 
+  public function export()
+  {
+    foreach ($this->clients as $client) {
+      $client->export();
+    }
+  }
+
   protected function setup()
   {
     foreach ($this->databases as $source_db_name => $data) {
@@ -36,7 +43,7 @@ class Database
         Util::resolve($conn['pass']),
         Util::resolve($conn['host'] ?? $class::HOST),
         (int) Util::resolve($conn['port'] ?? $class::PORT),
-        $this->getBackupDir($source_db_name, $data['timestamped'] ?? false),
+        $this->getBackupPath($source_db_name, Util::resolve($conn['name']), $data['timestamped'] ?? false),
         $data['compressed'] ?? true,
         $data['include'] ?? [],
         $data['exclude'] ?? [],
@@ -45,18 +52,15 @@ class Database
     }
   }
 
-  protected function getBackupDir(string $source_db_name, bool $append_timestamp): string
+  protected function getBackupPath(string $source_db_name, string $db_name, bool $append_timestamp): string
   {
-    $dir = sprintf(
-      '%s/%s%s',
+    return sprintf(
+      '%s/%s/%s%s',
       $this->backupDir,
       $source_db_name,
+      $db_name,
       $append_timestamp ? '_' . date('d-m-Y_H-i-s') : '',
     );
-    if (!is_dir($dir) && !mkdir($dir, 0755, true)) {
-      throw new RuntimeException("Error creating backup directory: $dir");
-    }
-    return $dir;
   }
 
   protected function validateData(array $data): bool
@@ -79,10 +83,4 @@ class Database
     return $class;
   }
 
-  protected function export()
-  {
-    foreach ($this->clients as $client) {
-      $client->export();
-    }
-  }
 }
