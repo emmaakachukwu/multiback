@@ -3,6 +3,7 @@
 namespace Multiback\Database;
 
 use Multiback\Exception\ValidationException;
+use Multiback\Util;
 use RuntimeException;
 
 class Database
@@ -30,18 +31,17 @@ class Database
       $class = __NAMESPACE__."\\".ucfirst($data['driver']);
       $conn = $data['connection'];
       $this->clients[] = new $class(
-        $conn['name'],
-        $conn['user'],
-        $conn['pass'],
-        $conn['host'],
-        (int) $conn['port'],
+        Util::resolve($conn['name']),
+        Util::resolve($conn['user']),
+        Util::resolve($conn['pass']),
+        Util::resolve($conn['host']),
+        (int) Util::resolve($conn['port']),
         $this->getBackupDir($source_db_name, $data['timestamped'] ?? false),
         $data['compressed'] ?? true,
         $data['include'] ?? [],
         $data['exclude'] ?? [],
       );
     }
-    
   }
 
   protected function getBackupDir(string $source_db_name, bool $append_timestamp): string
