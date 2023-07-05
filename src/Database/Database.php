@@ -36,7 +36,7 @@ class Database
         $conn['host'],
         (int) $conn['port'],
         $this->getBackupDir($source_db_name, $data['timestamped'] ?? false),
-        $data['compressed'] ?? false,
+        $data['compressed'] ?? true,
         $data['include'] ?? [],
         $data['exclude'] ?? [],
       );

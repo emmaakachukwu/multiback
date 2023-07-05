@@ -8,6 +8,8 @@ use Multiback\Database\Contracts\Database;
 use Multiback\Exception\DatabaseException;
 use PDO;
 use PDOException;
+use Phar;
+use PharData;
 use RuntimeException;
 
 class Mysql implements Database
@@ -16,6 +18,8 @@ class Mysql implements Database
 
   protected const FILE_EXT = 'sql';
 
+  public const COMPRESSION = 'gz';
+
   public function __construct(
     string $name,
     string $user,
@@ -23,7 +27,7 @@ class Mysql implements Database
     string $host = 'localhost',
     int $port = 3306,
     string $backupDir = null,
-    bool $compressed = false,
+    bool $compressed = true,
     array $include = [],
     array $exclude = [],
     array $truncate = [],
@@ -68,6 +72,9 @@ class Mysql implements Database
       }
     }
     fclose($file);
+    if ($this->compressed) {
+      $this->compress();
+    }
   }
 
   public function query(string $queryString, int $queryMode = PDO::FETCH_ASSOC)
@@ -154,6 +161,19 @@ class Mysql implements Database
       );
     }
     return $sql;
+  }
+
+  protected function compress(): void
+  {
+    $tar_archive = "$this->backupFile.tar";
+    $gz_archive = sprintf('%s.%s', $tar_archive, self::COMPRESSION);
+    $archive = new PharData($tar_archive);
+    $archive->addFile($this->backupFile, basename($this->backupFile));
+    @unlink($gz_archive);
+    $archive->compress(Phar::GZ);
+    foreach ([$tar_archive, $this->backupFile] as $file) {
+      @unlink($file);
+    }
   }
 
 }
