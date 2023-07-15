@@ -4,7 +4,6 @@ namespace Multiback\Database;
 
 use Multiback\Exception\ValidationException;
 use Multiback\Util;
-use RuntimeException;
 
 class Database
 {
@@ -55,7 +54,7 @@ class Database
   protected function getBackupPath(string $source_db_name, string $db_name, bool $append_timestamp): string
   {
     return sprintf(
-      '%s/%s/%s%s',
+      '%s/databases/%s/%s%s',
       $this->backupDir,
       $source_db_name,
       $db_name,

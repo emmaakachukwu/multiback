@@ -8,6 +8,7 @@ use Symfony\Component\Yaml\Yaml;
 use Multiback\Exception\ParseException;
 use Multiback\Exception\FileException;
 use Multiback\Exception\ValidationException;
+use Multiback\Uploader\Uploader;
 use Symfony\Component\Yaml\Exception\ParseException as YamlParseException;
 
 class Multiback
@@ -24,6 +25,8 @@ class Multiback
 
   protected array $sources;
 
+  protected $uploader;
+
   /**
    * @param string $configFile path to yaml file with defined configs
    * @param string $backupDir path to backup directory; default is /tmp/multiback
@@ -34,13 +37,13 @@ class Multiback
   public function __construct(
     string $configFile,
     array $actions = [],
-    string $backupDir = '/tmp/multiback',
+    string $backupDir = '/tmp',
     bool $postCleanup = false,
     bool $verbose = false,
   )
   {
     $this->actions = $actions;
-    $this->backupDir = $backupDir;
+    $this->backupDir = sprintf('%s/__multiback__', rtrim($backupDir, '/'));
 
     $this->validateActions($actions);
     $config = $this->getConfig($configFile);
@@ -50,11 +53,7 @@ class Multiback
   public function run(): void
   {
     foreach ($this->actions as $action) {
-      switch($action) {
-        case 'export':
-          $this->export();
-          break;
-      }
+      $this->{$action}();
     }
   }
 
@@ -111,7 +110,7 @@ class Multiback
    */
   protected function validateConfig(array $config): bool
   {
-    $action_diff = array_diff(array_keys($config), $this->actions);
+    $action_diff = array_diff(array_keys($config), $this->validActions);
     if (! empty($action_diff)) {
       throw new ValidationException(
         sprintf(
@@ -126,11 +125,12 @@ class Multiback
 
   protected function sourceConfigs(array $config): void
   {
-    if (! in_array('export', $this->actions)) {
-      return;
-    }
-    foreach ($config['export'] as $type => $data) {
+    foreach ($config['export'] ?? [] as $type => $data) {
       $this->sources[] = new Source($type, $data, $this->backupDir);
+    }
+
+    if (array_key_exists('upload', $config)) {
+      $this->uploader = new Uploader($this->backupDir, $config['upload']);
     }
   }
 
@@ -139,5 +139,10 @@ class Multiback
     foreach ($this->sources as $source) {
       $source->export();
     }
+  }
+
+  protected function upload(): void
+  {
+    $this->uploader->upload();
   }
 }

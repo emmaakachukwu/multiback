@@ -13,6 +13,7 @@
         }
     ],
     "require": {
-        "symfony/yaml": "^6.3"
+        "symfony/yaml": "^6.3",
+        "aws/aws-sdk-php": "^3.275"
     }
 }
