@@ -4,6 +4,7 @@ namespace Multiback;
 
 use Multiback\Database\Database;
 use Multiback\Exception\ValidationException;
+use Multiback\File\File;
 
 class Source
 {
@@ -34,6 +35,10 @@ class Source
     switch ($this->type) {
       case 'databases':
         $this->client = new Database($this->data, $this->backupDir);
+        break;
+      
+      case 'files':
+        $this->client = new File($this->data, $this->backupDir);
         break;
       
       default:

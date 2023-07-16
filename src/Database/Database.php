@@ -65,9 +65,9 @@ class Database
   protected function validateData(array $data): bool
   {
     $diff = array_diff($this->requiredDataKeys, array_keys($data));
-    if (! empty($diff)) {
+    if ($diff) {
       throw new ValidationException(
-        sprintf('Missing database requirement: %s;', implode(', ', $diff))
+        sprintf('Missing database requirement: %s', implode(', ', $diff))
       );
     }
     return true;
